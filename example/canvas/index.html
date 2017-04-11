@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <!-- twitter bootstrap CSS stylesheet - not required by cornerstone -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+
+<h1>
+jsminimal/index.html
+</h1>
+
+This is an example of the minimal use of cornerstone driven by javascript
+
+<br>
+<br>
+
+In this example, javascript is used to image enable a div.
+
+<br>
+<br>
+
+
+<div id="dicomImage" style="width:512px;height:512px;">
+</div>
+
+</div>
+
+<div id="other-canvas">
+</div>
+
+</body>
+
+<!-- cornerstone depends on jQuery so it must be loaded first-->
+<script src="../jquery.min.js"></script>
+
+<!-- include the cornerstone library -->
+<script src="../../dist/cornerstone.js"></script>
+
+<!-- include special code for these examples which provides images -->
+<script src="../exampleImageIdLoader.js"></script>
+
+<script>
+
+  function draw_on_canvas(canvas, image, viewport){
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "green";
+    ctx.fillRect(10, 10, 100, 100);
+    viewport.scale=1;
+    renderImage(canvas,image,viewport);
+    return;
+  }
+
+  function renderImage(canvas, image, viewport){
+    if(canvas === undefined) {
+        throw "canvas: parameter element cannot be undefined";
+    }
+    if(image === undefined) {
+        throw "imageId: parameter image cannot be undefined";
+    }
+    if(viewport === undefined) {
+        throw "viewport: parameter image cannot be undefined";
+    }
+
+    var fake_enabled_element = {};
+    fake_enabled_element.image = image;
+    fake_enabled_element.canvas = canvas;
+    fake_enabled_element.viewport = viewport;
+    cornerstone.drawImage(fake_enabled_element,false);
+  }
+
+    $(document).ready(function() {
+        var imageId = 'example://1';
+        var element = document.getElementById('dicomImage');
+        cornerstone.enable(element);
+        cornerstone.loadImage(imageId).then(function(image) {
+            cornerstone.displayImage(element, image);
+            var canvas = $('<canvas></canvas>');
+            canvas.attr("width", image.height);
+            canvas.attr("height", image.width);
+            $("#other-canvas").append(canvas);
+            var viewport = cornerstone.getViewport(element);
+            draw_on_canvas(canvas[0],image, viewport);
+        });
+    });
+
+</script>
+</html>
