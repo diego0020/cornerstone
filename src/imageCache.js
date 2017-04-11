@@ -124,8 +124,13 @@
         if (cachedImage === undefined) {
             throw "removeImagePromise: imageId must not be undefined";
         }
-
-        cachedImage.imagePromise.reject();
+        // Reject is not part of Promise API; 
+        // it works for jQuery deferred but will fail for actual promises
+        try{
+          cachedImage.imagePromise.reject();
+        }catch(e){
+          console.error("Could not reject deferred");
+        }
         cachedImages.splice( cachedImages.indexOf(cachedImage), 1);
         cacheSizeInBytes -= cachedImage.sizeInBytes;
         decache(cachedImage.imagePromise, cachedImage.imageId);
