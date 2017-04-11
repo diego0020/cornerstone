@@ -50,11 +50,11 @@
    * @param imageId
    * @returns {boolean}
    */
-  function getMetaData(type, imageId) {
+  function getMetaData(type, imageId, element) {
     // invoke each provider in priority order until one returns something
     for(var i=0; i < providers.length; i++) {
       var result;
-      result = providers[i].provider(type, imageId);
+      result = providers[i].provider(type, imageId, element);
       if (result !== undefined) {
         return result;
       }
