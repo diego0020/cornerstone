@@ -1,43 +1,36 @@
+import { getEnabledElement } from './enabledElements.js';
+
 /**
- * This module contains functions to deal with getting and setting the viewport for an enabled element
+ * Retrieves the viewport for the specified enabled element
+ *
+ * @param {HTMLElement} element The DOM element enabled for Cornerstone
+ * @returns {Viewport|undefined} The Cornerstone Viewport settings for this element, if they exist. Otherwise, undefined
  */
-(function (cornerstone) {
+export default function (element) {
+  const enabledElement = getEnabledElement(element);
 
-    "use strict";
+  const viewport = enabledElement.viewport;
 
-    /**
-     * Returns the viewport for the specified enabled element
-     * @param element
-     * @returns {*}
-     */
-    function getViewport(element) {
-        var enabledElement = cornerstone.getEnabledElement(element);
+  if (viewport === undefined) {
+    return;
+  }
 
-        var viewport = enabledElement.viewport;
-        if(viewport === undefined) {
-            return undefined;
-        }
-        return {
-            scale : viewport.scale,
-            translation : {
-                x : viewport.translation.x,
-                y : viewport.translation.y
-            },
-            voi : {
-                windowWidth: viewport.voi.windowWidth,
-                windowCenter : viewport.voi.windowCenter
-            },
-            invert : viewport.invert,
-            pixelReplication: viewport.pixelReplication,
-            rotation: viewport.rotation, 
-            hflip: viewport.hflip,
-            vflip: viewport.vflip,
-            modalityLUT: viewport.modalityLUT,
-            voiLUT: viewport.voiLUT
-        };
-    }
-
-    // module/private exports
-    cornerstone.getViewport = getViewport;
-
-}(cornerstone));
+  return {
+    scale: viewport.scale,
+    translation: {
+      x: viewport.translation.x,
+      y: viewport.translation.y
+    },
+    voi: {
+      windowWidth: viewport.voi.windowWidth,
+      windowCenter: viewport.voi.windowCenter
+    },
+    invert: viewport.invert,
+    pixelReplication: viewport.pixelReplication,
+    rotation: viewport.rotation,
+    hflip: viewport.hflip,
+    vflip: viewport.vflip,
+    modalityLUT: viewport.modalityLUT,
+    voiLUT: viewport.voiLUT
+  };
+}

@@ -1,102 +1,126 @@
 /**
  * This module deals with ImageLoaders, loading images and caching images
  */
+import { getImagePromise, putImagePromise } from './imageCache.js';
+import events from './events.js';
 
-(function ($, cornerstone) {
+const imageLoaders = {};
 
-    "use strict";
+let unknownImageLoader;
 
-    var imageLoaders = {};
+/**
+ * Load an image using a registered Cornerstone Image Loader.
+ *
+ * The image loader that is used will be
+ * determined by the image loader scheme matching against the imageId.
+ *
+ * @param {String} imageId A Cornerstone Image Object's imageId
+ * @param {Object} [options] Options to be passed to the Image Loader
+ *
+ * @returns {Deferred} A jQuery Deferred which can be used to act after an image is loaded or loading fails
+ */
+function loadImageFromImageLoader (imageId, options) {
+  const colonIndex = imageId.indexOf(':');
+  const scheme = imageId.substring(0, colonIndex);
+  const loader = imageLoaders[scheme];
+  let imagePromise;
 
-    var unknownImageLoader;
+  if (loader === undefined || loader === null) {
+    if (unknownImageLoader !== undefined) {
+      imagePromise = unknownImageLoader(imageId);
 
-    function loadImageFromImageLoader(imageId, options) {
-        var colonIndex = imageId.indexOf(":");
-        var scheme = imageId.substring(0, colonIndex);
-        var loader = imageLoaders[scheme];
-        var imagePromise;
-        if(loader === undefined || loader === null) {
-            if(unknownImageLoader !== undefined) {
-                imagePromise = unknownImageLoader(imageId);
-                return imagePromise;
-            }
-            else {
-                return undefined;
-            }
-        }
-        imagePromise = loader(imageId, options);
-
-        // broadcast an image loaded event once the image is loaded
-        // This is based on the idea here: http://stackoverflow.com/questions/3279809/global-custom-events-in-jquery
-        imagePromise.then(function(image) {
-            $(cornerstone).trigger('CornerstoneImageLoaded', {image: image});
-        });
-
-        return imagePromise;
+      return imagePromise;
     }
 
-    // Loads an image given an imageId and optional priority and returns a promise which will resolve
-    // to the loaded image object or fail if an error occurred.  The loaded image
-    // is not stored in the cache
-    function loadImage(imageId, options) {
-        if(imageId === undefined) {
-            throw "loadImage: parameter imageId must not be undefined";
-        }
+    throw new Error('loadImageFromImageLoader: no image loader for imageId');
+  }
 
-        var imagePromise = cornerstone.imageCache.getImagePromise(imageId);
-        if(imagePromise !== undefined) {
-            return imagePromise;
-        }
+  imagePromise = loader(imageId, options);
 
-        imagePromise = loadImageFromImageLoader(imageId, options);
-        if(imagePromise === undefined) {
-            throw "loadImage: no image loader for imageId";
-        }
+  // Broadcast an image loaded event once the image is loaded
+  imagePromise.then(function (image) {
+    $(events).trigger('CornerstoneImageLoaded', { image });
+  });
 
-        return imagePromise;
-    }
+  return imagePromise;
+}
 
-    // Loads an image given an imageId and optional priority and returns a promise which will resolve
-    // to the loaded image object or fail if an error occurred.  The image is
-    // stored in the cache
-    function loadAndCacheImage(imageId, options) {
-        if(imageId === undefined) {
-            throw "loadAndCacheImage: parameter imageId must not be undefined";
-        }
+/**
+ * Loads an image given an imageId and optional priority and returns a promise which will resolve to
+ * the loaded image object or fail if an error occurred.  The loaded image is not stored in the cache.
+ *
+ * @param {String} imageId A Cornerstone Image Object's imageId
+ * @param {Object} [options] Options to be passed to the Image Loader
+ *
+ * @returns {Deferred} A jQuery Deferred which can be used to act after an image is loaded or loading fails
+ */
+export function loadImage (imageId, options) {
+  if (imageId === undefined) {
+    throw new Error('loadImage: parameter imageId must not be undefined');
+  }
 
-        var imagePromise = cornerstone.imageCache.getImagePromise(imageId);
-        if(imagePromise !== undefined) {
-            return imagePromise;
-        }
+  let imagePromise = getImagePromise(imageId);
 
-        imagePromise = loadImageFromImageLoader(imageId, options);
-        if(imagePromise === undefined) {
-            throw "loadAndCacheImage: no image loader for imageId";
-        }
+  if (imagePromise !== undefined) {
+    return imagePromise;
+  }
 
-        cornerstone.imageCache.putImagePromise(imageId, imagePromise);
+  imagePromise = loadImageFromImageLoader(imageId, options);
 
-        return imagePromise;
-    }
+  return imagePromise;
+}
 
+//
 
-    // registers an imageLoader plugin with cornerstone for the specified scheme
-    function registerImageLoader(scheme, imageLoader) {
-        imageLoaders[scheme] = imageLoader;
-    }
+/**
+ * Loads an image given an imageId and optional priority and returns a promise which will resolve to
+ * the loaded image object or fail if an error occurred. The image is stored in the cache.
+ *
+ * @param {String} imageId A Cornerstone Image Object's imageId
+ * @param {Object} [options] Options to be passed to the Image Loader
+ *
+ * @returns {Deferred} A jQuery Deferred which can be used to act after an image is loaded or loading fails
+ */
+export function loadAndCacheImage (imageId, options) {
+  if (imageId === undefined) {
+    throw new Error('loadAndCacheImage: parameter imageId must not be undefined');
+  }
 
-    // Registers a new unknownImageLoader and returns the previous one (if it exists)
-    function registerUnknownImageLoader(imageLoader) {
-        var oldImageLoader = unknownImageLoader;
-        unknownImageLoader = imageLoader;
-        return oldImageLoader;
-    }
+  let imagePromise = getImagePromise(imageId);
 
-    // module exports
+  if (imagePromise !== undefined) {
+    return imagePromise;
+  }
 
-    cornerstone.loadImage = loadImage;
-    cornerstone.loadAndCacheImage = loadAndCacheImage;
-    cornerstone.registerImageLoader = registerImageLoader;
-    cornerstone.registerUnknownImageLoader = registerUnknownImageLoader;
+  imagePromise = loadImageFromImageLoader(imageId, options);
 
-}($, cornerstone));
+  putImagePromise(imageId, imagePromise);
+
+  return imagePromise;
+}
+
+/**
+ * Registers an imageLoader plugin with cornerstone for the specified scheme
+ *
+ * @param {String} scheme The scheme to use for this image loader (e.g. 'dicomweb', 'wadouri', 'http')
+ * @param {Function} imageLoader A Cornerstone Image Loader function
+ * @returns {void}
+ */
+export function registerImageLoader (scheme, imageLoader) {
+  imageLoaders[scheme] = imageLoader;
+}
+
+/**
+ * Registers a new unknownImageLoader and returns the previous one
+ *
+ * @param {Function} imageLoader A Cornerstone Image Loader
+ *
+ * @returns {Function|Undefined} The previous Unknown Image Loader
+ */
+export function registerUnknownImageLoader (imageLoader) {
+  const oldImageLoader = unknownImageLoader;
+
+  unknownImageLoader = imageLoader;
+
+  return oldImageLoader;
+}

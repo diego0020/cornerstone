@@ -1,25 +1,19 @@
+import { getEnabledElement } from './enabledElements.js';
+import drawImage from './internal/drawImage.js';
+
 /**
- * This module contains a function to immediately redraw an image
+ * Forces the image to be updated/redrawn for the specified enabled element
+ * @param {HTMLElement} element An HTML Element enabled for Cornerstone
+ * @param {Boolean} [invalidated=false] Whether or not the image pixel data has been changed, necessitating a redraw
+ *
+ * @returns {void}
  */
-(function (cornerstone) {
+export default function (element, invalidated = false) {
+  const enabledElement = getEnabledElement(element);
 
-    "use strict";
+  if (enabledElement.image === undefined) {
+    throw new Error('updateImage: image has not been loaded yet');
+  }
 
-    /**
-     * Forces the image to be updated/redrawn for the specified enabled element
-     * @param element
-     */
-    function updateImage(element, invalidated) {
-        var enabledElement = cornerstone.getEnabledElement(element);
-
-        if(enabledElement.image === undefined) {
-            throw "updateImage: image has not been loaded yet";
-        }
-
-        cornerstone.drawImage(enabledElement, invalidated);
-    }
-
-    // module exports
-    cornerstone.updateImage = updateImage;
-
-}(cornerstone));
+  drawImage(enabledElement, invalidated);
+}

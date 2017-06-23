@@ -1,71 +1,71 @@
-(function($, cornerstone) {
+// This module defines a way to access various metadata about an imageId.  This layer of abstraction exists
+// So metadata can be provided in different ways (e.g. by parsing DICOM P10 or by a WADO-RS document)
 
-  'use strict';
+const providers = [];
 
-  // this module defines a way to access various metadata about an imageId.  This layer of abstraction exists
-  // so metadata can be provided in different ways (e.g. by parsing DICOM P10 or by a WADO-RS document)
+/**
+ * Adds a metadata provider with the specified priority
+ * @param {Function} provider Metadata provider function
+ * @param {Number} [priority=0] - 0 is default/normal, > 0 is high, < 0 is low
+ *
+ * @returns {void}
+ */
+export function addProvider (provider, priority = 0) {
+  let i;
 
-  var providers = [];
-
-  /**
-   * Adds a metadata provider with the specified priority
-   * @param provider
-   * @param priority - 0 is default/normal, > 0 is high, < 0 is low
-   */
-  function addProvider(provider, priority) {
-    priority = priority || 0; // default priority
-    // find the right spot to insert this provider based on priority
-    for(var i=0; i < providers.length; i++) {
-      if(providers[i].priority <= priority) {
-        break;
-      }
-    }
-
-    // insert the decode task at position i
-    providers.splice(i, 0, {
-      priority: priority,
-      provider: provider
-    });
-
-  }
-
-  /**
-   * Removes the specified provider
-   * @param provider
-   */
-  function removeProvider( provider) {
-    for(var i=0; i < providers.length; i++) {
-      if(providers[i].provider === provider) {
-        providers.splice(i, 1);
-        return;
-      }
+  // Find the right spot to insert this provider based on priority
+  for (i = 0; i < providers.length; i++) {
+    if (providers[i].priority <= priority) {
+      break;
     }
   }
 
-  /**
-   * Gets metadata from the registered metadata providers.  Will call each one from highest priority to lowest
-   * until one responds
-   *
-   * @param type
-   * @param imageId
-   * @returns {boolean}
-   */
-  function getMetaData(type, imageId, element) {
-    // invoke each provider in priority order until one returns something
-    for(var i=0; i < providers.length; i++) {
-      var result;
-      result = providers[i].provider(type, imageId, element);
-      if (result !== undefined) {
-        return result;
-      }
+  // Insert the decode task at position i
+  providers.splice(i, 0, {
+    priority,
+    provider
+  });
+}
+
+/**
+ * Removes the specified provider
+ *
+ * @param {Function} provider Metadata provider function
+ *
+ * @returns {void}
+ */
+export function removeProvider (provider) {
+  for (let i = 0; i < providers.length; i++) {
+    if (providers[i].provider === provider) {
+      providers.splice(i, 1);
+
+      break;
     }
   }
+}
 
-  // module/private exports
-  cornerstone.metaData = {
-    addProvider: addProvider,
-    removeProvider: removeProvider,
-    get: getMetaData
-  };
+/**
+ * Gets metadata from the registered metadata providers.  Will call each one from highest priority to lowest
+ * until one responds
+ *
+ * @param {String} type The type of metadata requested from the metadata store
+ * @param {String} imageId The Cornerstone Image Object's imageId
+ *
+ * @returns {*} The metadata retrieved from the metadata store
+ */
+function getMetaData (type, imageId) {
+  // Invoke each provider in priority order until one returns something
+  for (let i = 0; i < providers.length; i++) {
+    const result = providers[i].provider(type, imageId, element);
 
-})($, cornerstone);
+    if (result !== undefined) {
+      return result;
+    }
+  }
+}
+
+export default {
+  addProvider,
+  removeProvider,
+  get: getMetaData
+};

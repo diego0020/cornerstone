@@ -1,47 +1,45 @@
+import { getEnabledElement } from './enabledElements.js';
+import updateImage from './updateImage.js';
+
 /**
- * This module will fit an image to fit inside the canvas displaying it such that all pixels
- * in the image are viewable
+ * Retrieves the current image dimensions given an enabled element
+ *
+ * @param {EnabledElement} enabledElement The Cornerstone Enabled Element
+ * @return {{width, height}} The Image dimensions
  */
-(function (cornerstone) {
+function getImageSize (enabledElement) {
+  if (enabledElement.viewport.rotation === 0 || enabledElement.viewport.rotation === 180) {
+    return {
+      width: enabledElement.image.width,
+      height: enabledElement.image.height
+    };
+  }
 
-    "use strict";
+  return {
+    width: enabledElement.image.height,
+    height: enabledElement.image.width
+  };
 
-    function getImageSize(enabledElement) {
-      if(enabledElement.viewport.rotation === 0 ||enabledElement.viewport.rotation === 180) {
-        return {
-          width: enabledElement.image.width,
-          height: enabledElement.image.height
-        };
-      } else {
-        return {
-          width: enabledElement.image.height,
-          height: enabledElement.image.width
-        };
-      }
-    }
+}
 
-    /**
-     * Adjusts an images scale and center so the image is centered and completely visible
-     * @param element
-     */
-    function fitToWindow(element)
-    {
-        var enabledElement = cornerstone.getEnabledElement(element);
-        var imageSize = getImageSize(enabledElement);
+/**
+ * Adjusts an image's scale and translation so the image is centered and all pixels
+ * in the image are viewable.
+ *
+ * @param {HTMLElement} element The Cornerstone element to update
+ * @returns {void}
+ */
+export default function (element) {
+  const enabledElement = getEnabledElement(element);
+  const imageSize = getImageSize(enabledElement);
 
-        var verticalScale = enabledElement.canvas.height / imageSize.height;
-        var horizontalScale= enabledElement.canvas.width / imageSize.width;
-        if(horizontalScale < verticalScale) {
-          enabledElement.viewport.scale = horizontalScale;
-        }
-        else
-        {
-          enabledElement.viewport.scale = verticalScale;
-        }
-        enabledElement.viewport.translation.x = 0;
-        enabledElement.viewport.translation.y = 0;
-        cornerstone.updateImage(element);
-    }
+  const verticalScale = enabledElement.canvas.height / imageSize.height;
+  const horizontalScale = enabledElement.canvas.width / imageSize.width;
 
-    cornerstone.fitToWindow = fitToWindow;
-}(cornerstone));
+  // The new scale is the minimum of the horizontal and vertical scale values
+  enabledElement.viewport.scale = Math.min(horizontalScale, verticalScale);
+
+  enabledElement.viewport.translation.x = 0;
+  enabledElement.viewport.translation.y = 0;
+  updateImage(element);
+}
