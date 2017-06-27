@@ -127,10 +127,10 @@ export function removeImagePromise (imageId) {
     throw new Error('removeImagePromise: imageId was not present in imageCache');
   }
 
-  try{
+  try {
     cachedImage.imagePromise.reject();
-  }catch(e){
-    console.error("Could not reject deferred");
+  } catch (e) {
+    console.error('Could not reject deferred');
   }
   cachedImages.splice(cachedImages.indexOf(cachedImage), 1);
   cacheSizeInBytes -= cachedImage.sizeInBytes;

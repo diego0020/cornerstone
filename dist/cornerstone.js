@@ -2044,7 +2044,11 @@ function removeImagePromise(imageId) {
     throw new Error('removeImagePromise: imageId was not present in imageCache');
   }
 
-  cachedImage.imagePromise.reject();
+  try {
+    cachedImage.imagePromise.reject();
+  } catch (e) {
+    console.error('Could not reject deferred');
+  }
   cachedImages.splice(cachedImages.indexOf(cachedImage), 1);
   cacheSizeInBytes -= cachedImage.sizeInBytes;
   decache(cachedImage.imagePromise, cachedImage.imageId);
@@ -2172,13 +2176,14 @@ function removeProvider(provider) {
  *
  * @param {String} type The type of metadata requested from the metadata store
  * @param {String} imageId The Cornerstone Image Object's imageId
+ * @param {Object} element The Cornerstone Element
  *
  * @returns {*} The metadata retrieved from the metadata store
  */
-function getMetaData(type, imageId) {
+function getMetaData(type, imageId, element) {
   // Invoke each provider in priority order until one returns something
   for (var i = 0; i < providers.length; i++) {
-    var result = providers[i].provider(type, imageId);
+    var result = providers[i].provider(type, imageId, element);
 
     if (result !== undefined) {
       return result;
