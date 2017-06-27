@@ -1,3 +1,14 @@
+# Version 0.12.0
+
+- Add layer API support for drawing composite images
+- Remove globals from eslintrc.js
+- Fix broken event firing for WebGL texture cache
+
+# Version 0.11.1
+
+- Add a 'CornerstonePreRender' event that is fire before the image is rendered
+- Switch module imports to include '.js' extensions to improve support for Chrome native modules
+
 # Version 0.11.0
 
 - Switch events to fire on cornerstone.events instead of cornerstone. This was broken when Cornerstone was loaded as a module.
