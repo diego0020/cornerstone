@@ -50,14 +50,13 @@ export function removeProvider (provider) {
  *
  * @param {String} type The type of metadata requested from the metadata store
  * @param {String} imageId The Cornerstone Image Object's imageId
- * @param {Object} element The Cornerstone Element
  *
  * @returns {*} The metadata retrieved from the metadata store
  */
-function getMetaData (type, imageId, element) {
+function getMetaData (type, imageId) {
   // Invoke each provider in priority order until one returns something
   for (let i = 0; i < providers.length; i++) {
-    const result = providers[i].provider(type, imageId, element);
+    const result = providers[i].provider(type, imageId);
 
     if (result !== undefined) {
       return result;

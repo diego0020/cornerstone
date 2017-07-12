@@ -1,4 +1,4 @@
-/*! cornerstone-core - 0.12.0 - 2017-06-27 | (c) 2016 Chris Hafey | https://github.com/chafey/cornerstone */
+/*! cornerstone-core - 0.12.0 - 2017-07-12 | (c) 2016 Chris Hafey | https://github.com/chafey/cornerstone */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -191,7 +191,7 @@ var enabledElements = [];
  * @property {HTMLCanvasElement} [canvas] - The current canvas for this enabledElement
  * @property {Boolean} invalid - Whether or not the image pixel data underlying the enabledElement has been changed, necessitating a redraw
  * @property {Boolean} needsRedraw - A flag for triggering a redraw of the canvas without re-retrieving the pixel data, since it remains valid
- * @property {[EnabledElementLayer]} [layers] - The layers that have been added to the enabledElement
+ * @property {EnabledElementLayer[]} [layers] - The layers that have been added to the enabledElement
  * @property {Boolean} [syncViewports] - Whether or not to synchronize the viewport parameters
  * for each of the enabled element's layers
  * @property {Boolean} [lastSyncViewportsState] - The previous state for the sync viewport boolean
@@ -2176,14 +2176,13 @@ function removeProvider(provider) {
  *
  * @param {String} type The type of metadata requested from the metadata store
  * @param {String} imageId The Cornerstone Image Object's imageId
- * @param {Object} element The Cornerstone Element
  *
  * @returns {*} The metadata retrieved from the metadata store
  */
-function getMetaData(type, imageId, element) {
+function getMetaData(type, imageId) {
   // Invoke each provider in priority order until one returns something
   for (var i = 0; i < providers.length; i++) {
-    var result = providers[i].provider(type, imageId, element);
+    var result = providers[i].provider(type, imageId);
 
     if (result !== undefined) {
       return result;
